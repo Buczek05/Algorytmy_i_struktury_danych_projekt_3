@@ -10,7 +10,7 @@ private:
 public:
     TreeManager(const INDEX &index, const VALUE &value) : root(index, value) {}
     VALUE *get(INDEX index);
-    //VALUE *pop(INDEX index);
+    VALUE *pop(INDEX index);
     void set(INDEX index, VALUE value);
     void disp_preorder(std::ostream &os = std::cout) const {root.disp_preorder(os);};
     void disp_inorder(std::ostream &os = std::cout) const {root.disp_inorder(os);};
@@ -29,4 +29,14 @@ VALUE *TreeManager<INDEX, VALUE>::get(INDEX index) {
 template<typename INDEX, typename VALUE>
 void TreeManager<INDEX, VALUE>::set(INDEX index, VALUE value) {
     root.set(index, value);
+}
+
+template<typename INDEX, typename VALUE>
+VALUE *TreeManager<INDEX, VALUE>::pop(INDEX index) {
+    try{
+        root.pop(index);
+    }
+    catch(){
+        //no root
+    }
 }
