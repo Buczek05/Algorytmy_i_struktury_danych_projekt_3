@@ -36,7 +36,7 @@ VALUE *TreeManager<INDEX, VALUE>::pop(INDEX index) {
     try{
         root.pop(index);
     }
-    catch(){
-        //no root
+    catch(std::exception){
+        std::cout << "exception deleting root without childrens";
     }
 }

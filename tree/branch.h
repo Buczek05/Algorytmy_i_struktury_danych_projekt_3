@@ -71,50 +71,51 @@ VALUE *Branch<INDEX, VALUE>::pop(const INDEX &search_index) {
             is_left = false;
         } else return nullptr;
     }
-    if (!previous && !current->left && !current->right) throw ;
-    else if (!previous && !current->left) current = current->right;
-    else if (!previous && !current->right) current = current->left;
+    if (!previous && !current->left && !current->right) throw std::exception();
+    else if (!previous && !current->left) *current = *current->right;
+    else if (!previous && !current->right) *current = *current->left;
     else if (!previous) {
         if (current->right->left) min = current->right->pop_min();
         else min = current->right;
         current->index = min->index;
         current->value = min->value;
         current->right = min->right;
+        min->right = nullptr;
+        delete min;
+    } else if (!current->left && !current->right){
+        if (is_left) previous->left = nullptr;
+        else previous->right = nullptr;
+        delete current;
     }
-    else if(!current->right && is_left) {
+    else if (!current->right && is_left) {
         previous->left = current->left;
+        current->left = nullptr;
+        current->right = nullptr;
         delete current;
-    }
-    else if(!current->right){
+    } else if (!current->right) {
         previous->right = current->left;
+        current->left = nullptr;
+        current->right = nullptr;
         delete current;
-    }
-
-    {
+    } else if (!current->left && is_left) {
+        previous->left = current->right;
+        current->left = nullptr;
+        current->right = nullptr;
+        delete current;
+    } else if (!current->right) {
+        previous->right = current->right;
+        current->left = nullptr;
+        current->right = nullptr;
+        delete current;
+    } else {
         if (current->right->left) min = current->right->pop_min();
         else min = current->right;
         current->index = min->index;
         current->value = min->value;
         current->right = min->right;
+        min->right = nullptr;
+        delete min;
     }
-
-
-
-    if (current->right && current->right->left) min = current->right->pop_min();
-    else if (current->right) min = current->right;
-    else min = current->left;
-    if (previous) {
-        if (is_left) previous->left = min;
-        else previous->right = min;
-    } else if (min) {
-        if (current->right) {
-            current->index = min->index;
-            current->value = min->value;
-            current->right = min->right;
-        } else {
-            current = min;
-        }
-    } else throw
 }
 
 template<typename INDEX, typename VALUE>
