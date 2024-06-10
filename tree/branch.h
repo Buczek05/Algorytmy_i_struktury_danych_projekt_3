@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include "./exceptions.h"
 
 template<typename INDEX, typename VALUE>
@@ -10,6 +11,12 @@ private:
     Branch *left = nullptr, *right = nullptr;
 
     Branch *pop_min();
+
+    void _delete() {
+        left = nullptr;
+        right = nullptr;
+        delete this;
+    }
 
 public:
     Branch(const INDEX &search_index, const VALUE &new_value) : index(search_index), value(new_value) {}
@@ -35,14 +42,15 @@ public:
         return os;
     }
 
-    Branch *findMin(Branch *node);
 
     VALUE get_value() { return value; }
+
 
 #ifdef USE_RECURRENCE
 
     INDEX get_index() { return index; }
 
+    Branch *findMin(Branch *node);
     Branch *deleteNode(Branch *root, INDEX key);
 
 #else
@@ -75,10 +83,9 @@ void Branch<INDEX, VALUE>::set(const INDEX &search_index, const VALUE &new_value
 
 template<typename INDEX, typename VALUE>
 Branch<INDEX, VALUE> *Branch<INDEX, VALUE>::pop_min() {
-    if (left && left->left) return left->pop_min();
-    Branch *temp = left;
-    left = left->left;
-    return temp;
+    Branch<INDEX, VALUE> *min = left;
+    while (min->left) min = min->left;
+    return min;
 }
 
 template<typename INDEX, typename VALUE>
@@ -119,9 +126,9 @@ Branch<INDEX, VALUE> *Branch<INDEX, VALUE>::deleteNode(Branch<INDEX, VALUE> *roo
         return root;
     }
 
-    if (key < root->value) {
+    if (key < root->index) {
         root->left = deleteNode(root->left, key);
-    } else if (key > root->value) {
+    } else if (key > root->index) {
         root->right = deleteNode(root->right, key);
     } else {
         // Węzeł do usunięcia został znaleziony
@@ -143,9 +150,9 @@ Branch<INDEX, VALUE> *Branch<INDEX, VALUE>::deleteNode(Branch<INDEX, VALUE> *roo
 
         // Węzeł z dwoma dziećmi
         Branch *temp = findMin(root->right);
-        root->value = temp->value;
         root->index = temp->index;
-        root->right = deleteNode(root->right, temp->value);
+        root->value = temp->value;
+        root->right = deleteNode(root->right, temp->index);
     }
     return root;
 }
@@ -156,73 +163,49 @@ template<typename INDEX, typename VALUE>
 VALUE Branch<INDEX, VALUE>::pop(const INDEX &search_index) {
     Branch *previous = nullptr, *current = this, *min;
     VALUE pop_value;
-    bool is_left;
-    while (search_index != current->index) {
-        if (search_index < current->index && current->left) {
+    while (current && search_index != current->index) {
+        if (search_index < current->index) {
             previous = current;
             current = current->left;
-            is_left = true;
-        } else if (current->index < search_index && current->right) {
+        } else if (current->index < search_index) {
             previous = current;
             current = current->right;
-            is_left = false;
-        } else throw NotFoundElementException();
+        }
     }
+#ifdef USE_EXAPTION
+    if (!current) throw NotFoundElementException();
     pop_value = current->value;
-    if (!previous && !current->left && !current->right) throw PopElementIsRoot();
-    else if (!previous && !current->left) *current = *current->right;
-    else if (!previous && !current->right) *current = *current->left;
-    else if (!previous) {
-        if (current->right->left) min = current->right->pop_min();
-        else min = current->right;
-        current->index = min->index;
-        current->value = min->value;
-        min->right = nullptr;
-        delete min;
-    } else if (!current->left && !current->right) {
-        if (is_left) previous->left = nullptr;
+#else
+    if (!current) return pop_value;
+#endif
+    if (current->left && current->right) {
+        if (current->right->left) {
+            min = current->right->pop_min();
+            current->index = min->index;
+            current->value = min->value;
+            current->right->pop(min->index);
+        } else {
+            min = current->right;
+            current->index = min->index;
+            current->value = min->value;
+            current->right = min->right;
+            min->_delete();
+        }
+    } else if (!current->left && current->right) {
+        min = current->right;
+        *current = *min;
+        min->_delete();
+    } else if (!current->right && current->left) {
+        min = current->left;
+        *current = *min;
+        min->_delete();
+    } else if (current == this && !current->right && !current->left) throw PopElementIsRoot();
+    else {
+        if (previous->left == current) previous->left = nullptr;
         else previous->right = nullptr;
-        delete current;
-    } else if (!current->right && is_left) {
-        previous->left = current->left;
-        current->left = nullptr;
-        current->right = nullptr;
-        delete current;
-    } else if (!current->right) {
-        previous->right = current->left;
-        current->left = nullptr;
-        current->right = nullptr;
-        delete current;
-    } else if (!current->left && is_left) {
-        previous->left = current->right;
-        current->left = nullptr;
-        current->right = nullptr;
-        delete current;
-    } else if (!current->right) {
-        previous->right = current->right;
-        current->left = nullptr;
-        current->right = nullptr;
-        delete current;
-    } else if (is_left) {
-        if (current->right->left) min = current->right->pop_min();
-        else min = current->right;
-        previous->left = min;
-        min->left = current->left;
-        if (min != current->right) min->right = current->right;
-        current->left = nullptr;
-        current->right = nullptr;
-        delete current;
-    } else {
-        if (current->right->left) min = current->right->pop_min();
-        else min = current->right;
-        previous->right = min;
-        min->left = current->left;
-        if (min != current->right) min->right = current->right;
-        current->left = nullptr;
-        current->right = nullptr;
-        delete current;
+        current->_delete();
     }
-    return value;
+    return current->value;
 }
 
 #endif

@@ -1,4 +1,5 @@
-//#define USE_RECURRENCE
+#pragma once
+#define USE_RECURRENCE
 
 #include <sstream>
 #include <chrono>
@@ -125,24 +126,24 @@ bool test_delete_step_by_step() {
 
 
 bool test_performance() {
-    TreeManager<int, int> tree;
-    int value;
-    for (int i = 0; i < 10000; i++) {
-        tree.set(i, i);
-    }
-
-    auto start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < 100000; i++) {
-        try {
-            tree.pop(std::rand());
+    for (int max = 1; max <= 300; max++) {
+        TreeManager<int, int> tree;
+        auto start = std::chrono::high_resolution_clock::now();
+        for (int _ = 0; _ <= 5000; _++) {
+            for (int i = 0; i <= max; i++) {
+                tree.set(i, i);
+            }
+            tree.pop(1);
+            tree.pop(3);
+            tree.pop(max / 2);
+            tree.pop(max);
+            tree.pop(max);
         }
-        catch (NotFoundElementException) {
-        }
+        auto end = std::chrono::high_resolution_clock::now();
+
+        std::chrono::duration<double> diff = end - start;
+        std::cout << max << ";" << diff.count() << std::endl;
+
     }
-    auto end = std::chrono::high_resolution_clock::now();
-
-    std::chrono::duration<double> diff = end - start;
-    std::cout << "Time taken to pop is : " << diff.count() << " s\n";
-
     return true;
 }
