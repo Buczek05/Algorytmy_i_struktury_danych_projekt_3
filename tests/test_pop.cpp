@@ -3,6 +3,7 @@
 
 #include <sstream>
 #include <chrono>
+#include <climits>
 #include "../tree/tree_manager.h"
 #include "../tree/exceptions.h"
 
