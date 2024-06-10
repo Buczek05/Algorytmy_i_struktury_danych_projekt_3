@@ -54,6 +54,13 @@ void run_test(bool (*func_to_run)(), char *test_name) {
 }
 
 int main() {
+    run_test(test_delete_root_both_empty, "Test delete root without both");
     run_test(test_delete_root_without_right, "Test delete root without right");
+    run_test(test_delete_root_without_right_short, "Test delete root without right short");
+    run_test(test_delete_root_without_left, "Test delete root without left");
+    run_test(test_delete_root_without_left_short, "Test delete root without left short");
+    run_test(test_delete_root, "Test delete root");
+    run_test(test_delete_when_element_not_exist, "Test delete when element not exist");
+    run_test(test_delete_step_by_step, "Test delete step by step");
     return 0;
 }

@@ -79,7 +79,6 @@ VALUE *Branch<INDEX, VALUE>::pop(const INDEX &search_index) {
         else min = current->right;
         current->index = min->index;
         current->value = min->value;
-        current->right = min->right;
         min->right = nullptr;
         delete min;
     } else if (!current->left && !current->right){
@@ -107,14 +106,24 @@ VALUE *Branch<INDEX, VALUE>::pop(const INDEX &search_index) {
         current->left = nullptr;
         current->right = nullptr;
         delete current;
+    } else if (is_left) {
+        if (current->right->left) min = current->right->pop_min();
+        else min = current->right;
+        previous->left = min;
+        min->left = current->left;
+        if (min != current->right) min->right = current->right;
+        current->left = nullptr;
+        current->right = nullptr;
+        delete current;
     } else {
         if (current->right->left) min = current->right->pop_min();
         else min = current->right;
-        current->index = min->index;
-        current->value = min->value;
-        current->right = min->right;
-        min->right = nullptr;
-        delete min;
+        previous->right = min;
+        min->left = current->left;
+        if (min != current->right) min->right = current->right;
+        current->left = nullptr;
+        current->right = nullptr;
+        delete current;
     }
 }
 

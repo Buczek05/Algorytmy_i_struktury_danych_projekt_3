@@ -2,15 +2,15 @@
 #include "../tree/tree_manager.h"
 
 int tree_1_indexes[] = {9};
-int tree_2_indexes[] = {9, 4, 2, 6, 1, 3, 5, 7}; // prawe puste
-int tree_3_indexes[] = {0, 4, 2, 6, 1, 3, 5, 7}; // lewe puste
-int tree_4_indexes[] = {9, 4, 2, 6, 1, 3, 5, 7, 15, 13, 17, 12, 14, 16, 18}; // oba
-int tree_5_indexes[] = {9, 4}; // prawe puste
-int tree_6_indexes[] = {9, 11}; // lewe puste
+int tree_2_indexes[] = {9, 4, 2, 6, 1, 3, 5, 7}; // right empty
+int tree_3_indexes[] = {0, 4, 2, 6, 1, 3, 5, 7}; // left empty
+int tree_4_indexes[] = {9, 4, 2, 6, 1, 3, 5, 7, 15, 12, 17, 11, 14, 13, 16, 18}; // oba
+int tree_5_indexes[] = {9, 4}; // right empty
+int tree_6_indexes[] = {9, 11}; // left empty
 
 TreeManager<int, int> create_tree(int *indexes, int len) {
     TreeManager<int, int> tree(indexes[0], indexes[0]);
-    for (int i = 1; indexes[i] != len; i++) {
+    for (int i = 1; i < len; i++) {
         tree.set(indexes[i], indexes[i]);
     }
     return tree;
@@ -36,17 +36,81 @@ bool is_sorted(TreeManager<int, int> &tree) {
 
 bool is_other_in_three(TreeManager<int, int> &tree, int *indexes, int len, int removed) {
     for (int i = 0; i < len; i++) {
-        if (indexes[i] != removed && tree.get(indexes[i]) == nullptr) return false;
+        if (indexes[i] != removed && tree.get(indexes[i]) == nullptr) {
+            std::cout << "Not found other in three: " << indexes[i] << std::endl;
+            return false;
+        }
     }
     return true;
 }
 
-bool test_delete_root_without_right() {
-    TreeManager<int, int> tree = create_tree(tree_2_indexes, 7);
-    tree.pop(9);
-    if (tree.get(9) != nullptr) {
-        std::cout << "Still exist";
+bool was_removed(TreeManager<int, int> &tree, int removed) {
+    if (tree.get(removed) != nullptr) {
+        std::cout << "Still exist" << std::endl;
         return false;
     }
-    return is_sorted(tree) && is_other_in_three(tree, tree_2_indexes, 7, 9);
+    return true;
+}
+
+bool test_delete(int *indexes, int len, int to_remove){
+    TreeManager<int, int> tree = create_tree(indexes, len);
+    tree.pop(to_remove);
+    return is_sorted(tree) && was_removed(tree, to_remove) && is_other_in_three(tree, indexes, len, to_remove);
+}
+
+bool test_delete_root_both_empty() {
+    return test_delete(tree_1_indexes, 1, 9);
+}
+
+bool test_delete_root_without_right() {
+    return test_delete(tree_2_indexes, 7, 9);
+}
+
+bool test_delete_root_without_right_short(){
+    return test_delete(tree_5_indexes, 2, 9);
+}
+
+bool test_delete_root_without_left() {
+    return test_delete(tree_3_indexes, 7, 0);
+}
+
+bool test_delete_root_without_left_short(){
+    return test_delete(tree_6_indexes, 2, 9);
+}
+
+bool test_delete_root() {
+    return test_delete(tree_4_indexes, 14, 9);
+}
+
+bool test_delete_when_element_not_exist(){
+    try{
+        test_delete(tree_1_indexes, 1, 0);
+    } catch(std::exception) { //TODO: change to specified exception
+        return true;
+    }
+    return false;
+}
+
+bool delete_step_by_step(int *indexes, int len){
+    bool result;
+    for (int i = 0; i < len; i++){
+        result = test_delete(indexes, len, indexes[i]);
+        if (!result) return false;
+    }
+    return true;
+}
+
+bool test_delete_step_by_step(){
+    bool result;
+    result = delete_step_by_step(tree_2_indexes, 7);
+    if (!result) return false;
+    result = delete_step_by_step(tree_3_indexes, 7);
+    if (!result) return false;
+    result = delete_step_by_step(tree_4_indexes, 15);
+    if (!result) return false;
+    result = delete_step_by_step(tree_5_indexes, 2);
+    if (!result) return false;
+    result = delete_step_by_step(tree_6_indexes, 2);
+    if (!result) return false;
+    return true;
 }
