@@ -62,5 +62,6 @@ int main() {
     run_test(test_delete_root, "Test delete root");
     run_test(test_delete_when_element_not_exist, "Test delete when element not exist");
     run_test(test_delete_step_by_step, "Test delete step by step");
+    run_test(test_performance, "Test performance");
     return 0;
 }

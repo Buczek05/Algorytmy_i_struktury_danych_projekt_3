@@ -1,13 +1,13 @@
 #pragma once
 
+#include "./exceptions.h"
+
 template<typename INDEX, typename VALUE>
 class Branch {
 private:
     INDEX index;
     VALUE value;
     Branch *left = nullptr, *right = nullptr;
-
-    void delete_branch();
 
     Branch *pop_min();
 
@@ -23,7 +23,6 @@ public:
 
     void set(const INDEX &search_index, const VALUE &new_value);
 
-    VALUE *pop(const INDEX &search_index);
 
     void disp_preorder(std::ostream &os = std::cout) const;
 
@@ -35,6 +34,24 @@ public:
         branch.disp_inorder(os);
         return os;
     }
+
+    Branch *findMin(Branch *node);
+
+    VALUE get_value() { return value; }
+
+#ifdef USE_RECURRENCE
+
+    INDEX get_index() { return index; }
+
+    Branch *deleteNode(Branch *root, INDEX key);
+
+#else
+
+    VALUE pop(const INDEX &search_index);
+
+#endif
+
+
 };
 
 template<typename INDEX, typename VALUE>
@@ -57,8 +74,88 @@ void Branch<INDEX, VALUE>::set(const INDEX &search_index, const VALUE &new_value
 }
 
 template<typename INDEX, typename VALUE>
-VALUE *Branch<INDEX, VALUE>::pop(const INDEX &search_index) {
+Branch<INDEX, VALUE> *Branch<INDEX, VALUE>::pop_min() {
+    if (left && left->left) return left->pop_min();
+    Branch *temp = left;
+    left = left->left;
+    return temp;
+}
+
+template<typename INDEX, typename VALUE>
+void Branch<INDEX, VALUE>::disp_preorder(std::ostream &os) const {
+    os << index << std::endl;
+    if (left) left->disp_inorder(os);
+    if (right) right->disp_inorder(os);
+}
+
+
+template<typename INDEX, typename VALUE>
+void Branch<INDEX, VALUE>::disp_inorder(std::ostream &os) const {
+    if (left) left->disp_inorder(os);
+    os << index << std::endl;
+    if (right) right->disp_inorder(os);
+}
+
+template<typename INDEX, typename VALUE>
+void Branch<INDEX, VALUE>::disp_postorder(std::ostream &os) const {
+    if (left) left->disp_inorder(os);
+    if (right) right->disp_inorder(os);
+    os << index << std::endl;
+}
+
+#ifdef USE_RECURRENCE
+
+template<typename INDEX, typename VALUE>
+Branch<INDEX, VALUE> *Branch<INDEX, VALUE>::findMin(Branch *node) {
+    while (node->left != nullptr) {
+        node = node->left;
+    }
+    return node;
+}
+
+template<typename INDEX, typename VALUE>
+Branch<INDEX, VALUE> *Branch<INDEX, VALUE>::deleteNode(Branch<INDEX, VALUE> *root, INDEX key) {
+    if (root == nullptr) {
+        return root;
+    }
+
+    if (key < root->value) {
+        root->left = deleteNode(root->left, key);
+    } else if (key > root->value) {
+        root->right = deleteNode(root->right, key);
+    } else {
+        // Węzeł do usunięcia został znaleziony
+
+        // Węzeł z jednym dzieckiem lub bez dzieci
+        if (root->left == nullptr) {
+            Branch *temp = root->right;
+            root->left = nullptr;
+            root->right = nullptr;
+            delete root;
+            return temp;
+        } else if (root->right == nullptr) {
+            Branch *temp = root->left;
+            root->left = nullptr;
+            root->right = nullptr;
+            delete root;
+            return temp;
+        }
+
+        // Węzeł z dwoma dziećmi
+        Branch *temp = findMin(root->right);
+        root->value = temp->value;
+        root->index = temp->index;
+        root->right = deleteNode(root->right, temp->value);
+    }
+    return root;
+}
+
+#else
+
+template<typename INDEX, typename VALUE>
+VALUE Branch<INDEX, VALUE>::pop(const INDEX &search_index) {
     Branch *previous = nullptr, *current = this, *min;
+    VALUE pop_value;
     bool is_left;
     while (search_index != current->index) {
         if (search_index < current->index && current->left) {
@@ -69,9 +166,10 @@ VALUE *Branch<INDEX, VALUE>::pop(const INDEX &search_index) {
             previous = current;
             current = current->right;
             is_left = false;
-        } else return nullptr;
+        } else throw NotFoundElementException();
     }
-    if (!previous && !current->left && !current->right) throw std::exception();
+    pop_value = current->value;
+    if (!previous && !current->left && !current->right) throw PopElementIsRoot();
     else if (!previous && !current->left) *current = *current->right;
     else if (!previous && !current->right) *current = *current->left;
     else if (!previous) {
@@ -81,12 +179,11 @@ VALUE *Branch<INDEX, VALUE>::pop(const INDEX &search_index) {
         current->value = min->value;
         min->right = nullptr;
         delete min;
-    } else if (!current->left && !current->right){
+    } else if (!current->left && !current->right) {
         if (is_left) previous->left = nullptr;
         else previous->right = nullptr;
         delete current;
-    }
-    else if (!current->right && is_left) {
+    } else if (!current->right && is_left) {
         previous->left = current->left;
         current->left = nullptr;
         current->right = nullptr;
@@ -125,34 +222,7 @@ VALUE *Branch<INDEX, VALUE>::pop(const INDEX &search_index) {
         current->right = nullptr;
         delete current;
     }
+    return value;
 }
 
-template<typename INDEX, typename VALUE>
-Branch<INDEX, VALUE> *Branch<INDEX, VALUE>::pop_min() {
-    if (left && left->left) return left->pop_min();
-    Branch *temp = left;
-    left = left->left;
-    return temp;
-}
-
-template<typename INDEX, typename VALUE>
-void Branch<INDEX, VALUE>::disp_preorder(std::ostream &os) const {
-    os << index << std::endl;
-    if (left) left->disp_inorder(os);
-    if (right) right->disp_inorder(os);
-}
-
-
-template<typename INDEX, typename VALUE>
-void Branch<INDEX, VALUE>::disp_inorder(std::ostream &os) const {
-    if (left) left->disp_inorder(os);
-    os << index << std::endl;
-    if (right) right->disp_inorder(os);
-}
-
-template<typename INDEX, typename VALUE>
-void Branch<INDEX, VALUE>::disp_postorder(std::ostream &os) const {
-    if (left) left->disp_inorder(os);
-    if (right) right->disp_inorder(os);
-    os << index << std::endl;
-}
+#endif
