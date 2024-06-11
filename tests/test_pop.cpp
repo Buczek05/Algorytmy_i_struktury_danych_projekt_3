@@ -130,7 +130,7 @@ bool test_performance() {
     for (int max = 1; max <= 300; max++) {
         TreeManager<int, int> tree;
         auto start = std::chrono::high_resolution_clock::now();
-        for (int _ = 0; _ <= 5000; _++) {
+        for (int _ = 0; _ <= 100000; _++) {
             for (int i = 0; i <= max; i++) {
                 tree.set(i, i);
             }
